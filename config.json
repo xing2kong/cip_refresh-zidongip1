@@ -1,0 +1,14 @@
+{
+  "urls": [
+    "https://ip.164746.xyz",
+    "https://cf.090227.xyz",
+    "https://stock.hostmonit.com/CloudFlareYes",
+    "https://www.wetest.vip/page/cloudflare/address_v4.html",
+    "https://api.uouin.com/cloudflare.html"
+  ],
+  "output_file": "ip.txt",
+  "timeout": 10,
+  "max_workers": 4,
+  "log_level": "INFO",
+  "user_agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36"
+}
