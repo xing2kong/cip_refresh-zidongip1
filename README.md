@@ -166,8 +166,15 @@ IPRefreshTool (主控制器)
 
 1. **Fork仓库**：将本仓库Fork到你的GitHub账户
 2. **启用Actions**：在仓库设置中启用GitHub Actions
-3. **配置权限**：确保Actions有写入权限（Settings → Actions → General → Workflow permissions）
+3. **配置权限**：这是关键步骤，必须正确配置权限
+   ```
+   Settings → Actions → General → Workflow permissions
+   选择 "Read and write permissions"
+   勾选 "Allow GitHub Actions to create and approve pull requests"
+   ```
 4. **手动运行**：首次可在Actions页面手动触发测试
+
+> ⚠️ **重要提示**：如果遇到 `Permission denied` 或 `403` 错误，请检查步骤3的权限配置是否正确。
 
 #### 获取结果
 
