@@ -148,53 +148,50 @@ IPRefreshTool (主控制器)
 
 ### 配置说明
 
-项目包含完整的GitHub Actions配置，位于 `.github/workflows/update-ip.yml`：
+项目包含简化的GitHub Actions配置，位于 `.github/workflows/update-ip.yml`：
 
 #### 触发条件
-- **定时触发**：每天UTC 0:00和12:00（北京时间8:00和20:00）
-- **手动触发**：在Actions页面点击"Run workflow"
-- **代码更新**：推送到main/master分支时
+- **定时运行**：每6小时自动执行一次
+- **手动触发**：在GitHub Actions页面手动运行
+- **代码更新**：当 `ip_refresh.py`、`config.json` 或工作流文件更新时自动运行
 
 #### 自动化流程
 1. **环境准备**：设置Python 3.9环境
 2. **依赖安装**：自动安装requirements.txt中的依赖
-3. **执行脚本**：运行ip_refresh.py获取最新IP
-4. **变更检测**：智能检测IP列表是否有更新
-5. **自动提交**：有更新时自动提交到仓库
-6. **版本发布**：每周自动创建release
-7. **文件归档**：上传IP列表作为构建产物
+3. **脚本执行**：运行IP刷新脚本
+4. **自动提交**：如有变化，自动提交并推送到仓库
+5. **文件归档**：将IP列表上传为GitHub Artifacts（保留30天）
 
 #### 使用步骤
 
-1. **Fork仓库**到你的GitHub账号
-2. **启用Actions**：在仓库Settings > Actions中启用
-3. **配置权限**：确保Actions有写入权限
-   ```
-   Settings > Actions > General > Workflow permissions
-   选择 "Read and write permissions"
-   ```
-4. **手动运行**：Actions页面 > Update CloudFlare IP List > Run workflow
+1. **Fork仓库**：将本仓库Fork到你的GitHub账户
+2. **启用Actions**：在仓库设置中启用GitHub Actions
+3. **配置权限**：确保Actions有写入权限（Settings → Actions → General → Workflow permissions）
+4. **手动运行**：首次可在Actions页面手动触发测试
 
 #### 获取结果
 
-- **直接访问**：`https://raw.githubusercontent.com/YOUR_USERNAME/YOUR_REPO/main/ip.txt`
-- **Release下载**：在Releases页面下载最新版本
-- **API获取**：使用GitHub API获取最新内容
+```bash
+# 获取最新IP列表
+curl -L https://github.com/你的用户名/仓库名/raw/main/ip.txt
+
+# 或使用wget
+wget https://github.com/你的用户名/仓库名/raw/main/ip.txt
+```
 
 ### 监控和通知
 
-- **执行状态**：Actions页面查看运行状态
-- **提交历史**：查看自动提交的IP更新记录
-- **错误处理**：失败时会在Actions页面显示详细日志
+- **执行状态**：在Actions页面查看每次运行的详细日志
+- **邮件通知**：可在GitHub设置中配置运行失败时的邮件通知
+- **构建产物**：可在Actions运行页面下载生成的IP列表文件
 
 ## 版本历史
 
-### v2.1 (当前版本)
-- ✨ 添加GitHub Actions自动化支持
-- 🤖 支持定时自动更新IP列表
-- 📦 自动创建release版本
-- 🔄 智能变更检测和提交
-- 📊 详细的执行摘要和统计
+### v2.2 (当前版本)
+- ✨ 简化GitHub Actions配置
+- 🔄 升级到actions/upload-artifact@v4
+- ⏰ 优化定时运行频率（每6小时）
+- 🎯 移除复杂的发布流程，专注核心功能
 
 ### v2.0
 - 完全重构代码架构，采用面向对象设计

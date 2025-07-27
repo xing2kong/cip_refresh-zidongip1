@@ -1,13 +1,11 @@
 name: Update CloudFlare IP List
 
-# 定时运行：每天北京时间上午8点和下午8点
-# 也可以手动触发
 on:
   schedule:
-    - cron: '0 0,12 * * *'  # UTC时间0点和12点，对应北京时间8点和20点
+    - cron: '0 */6 * * *'  # 每6小时运行一次
   workflow_dispatch:  # 允许手动触发
   push:
-    branches: [ main, master ]  # 推送到主分支时也运行
+    branches: [ main, master ]
     paths:
       - 'ip_refresh.py'
       - 'config.json'
@@ -20,116 +18,35 @@ jobs:
     steps:
     - name: Checkout repository
       uses: actions/checkout@v4
-      with:
-        token: ${{ secrets.GITHUB_TOKEN }}
-    
+      
     - name: Set up Python
       uses: actions/setup-python@v4
       with:
         python-version: '3.9'
-    
+        
     - name: Install dependencies
       run: |
         python -m pip install --upgrade pip
         pip install -r requirements.txt
     
     - name: Run IP refresh script
-      run: |
-        python ip_refresh.py
-    
-    - name: Check if IP list changed
-      id: check_changes
-      run: |
-        if [ -f "ip.txt" ]; then
-          if git diff --quiet ip.txt 2>/dev/null; then
-            echo "changed=false" >> $GITHUB_OUTPUT
-            echo "No changes detected in ip.txt"
-          else
-            echo "changed=true" >> $GITHUB_OUTPUT
-            echo "Changes detected in ip.txt"
-          fi
-        else
-          echo "changed=true" >> $GITHUB_OUTPUT
-          echo "ip.txt file created"
-        fi
+      run: python ip_refresh.py
     
     - name: Commit and push changes
-      if: steps.check_changes.outputs.changed == 'true'
       run: |
-        git config --local user.email "action@github.com"
+        git config --local user.email "actions@github.com"
         git config --local user.name "GitHub Action"
-        
-        # 添加ip.txt文件
-        git add ip.txt
-        
-        # 获取IP数量
-        IP_COUNT=$(wc -l < ip.txt | tr -d ' ')
-        
-        # 提交更改
-        git commit -m "🔄 Auto update CloudFlare IP list - ${IP_COUNT} IPs ($(date '+%Y-%m-%d %H:%M:%S UTC'))"
-        
-        # 推送更改
-        git push
-    
-    - name: Create release (weekly)
-      if: steps.check_changes.outputs.changed == 'true' && github.event.schedule == '0 0 * * 0'
-      uses: actions/create-release@v1
-      env:
-        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-      with:
-        tag_name: ip-list-${{ github.run_number }}
-        release_name: CloudFlare IP List ${{ github.run_number }}
-        body: |
-          📋 **CloudFlare IP List Update**
-          
-          🕒 **Update Time:** ${{ github.event.head_commit.timestamp }}
-          📊 **Total IPs:** $(wc -l < ip.txt) addresses
-          🔄 **Auto-generated** by GitHub Actions
-          
-          ### 📥 Download
-          - [ip.txt](https://github.com/${{ github.repository }}/releases/download/ip-list-${{ github.run_number }}/ip.txt)
-          
-          ### 🚀 Usage
-          ```bash
-          # Download latest IP list
-          wget https://github.com/${{ github.repository }}/releases/latest/download/ip.txt
-          
-          # Or use curl
-          curl -L -o ip.txt https://github.com/${{ github.repository }}/releases/latest/download/ip.txt
-          ```
-        draft: false
-        prerelease: false
+        if [ -n "$(git status --porcelain)" ]; then
+          git add ip.txt
+          git commit -m "🔄 Auto update CloudFlare IP list ($(date '+%Y-%m-%d %H:%M:%S UTC'))"
+          git push
+        else
+          echo "No changes detected, skipping commit."
+        fi
     
     - name: Upload IP list as artifact
-      if: steps.check_changes.outputs.changed == 'true'
-      uses: actions/upload-artifact@v3
+      uses: actions/upload-artifact@v4
       with:
         name: cloudflare-ip-list
         path: ip.txt
         retention-days: 30
-    
-    - name: Summary
-      if: always()
-      run: |
-        echo "## 📊 Execution Summary" >> $GITHUB_STEP_SUMMARY
-        echo "" >> $GITHUB_STEP_SUMMARY
-        
-        if [ -f "ip.txt" ]; then
-          IP_COUNT=$(wc -l < ip.txt | tr -d ' ')
-          echo "✅ **Success:** Generated IP list with **${IP_COUNT}** addresses" >> $GITHUB_STEP_SUMMARY
-          echo "📅 **Update Time:** $(date '+%Y-%m-%d %H:%M:%S UTC')" >> $GITHUB_STEP_SUMMARY
-          
-          if [ "${{ steps.check_changes.outputs.changed }}" == "true" ]; then
-            echo "🔄 **Status:** IP list updated and committed" >> $GITHUB_STEP_SUMMARY
-          else
-            echo "📋 **Status:** No changes detected" >> $GITHUB_STEP_SUMMARY
-          fi
-        else
-          echo "❌ **Error:** Failed to generate IP list" >> $GITHUB_STEP_SUMMARY
-        fi
-        
-        echo "" >> $GITHUB_STEP_SUMMARY
-        echo "### 🔗 Quick Links" >> $GITHUB_STEP_SUMMARY
-        echo "- [📁 Repository](https://github.com/${{ github.repository }})" >> $GITHUB_STEP_SUMMARY
-        echo "- [📋 Latest IP List](https://github.com/${{ github.repository }}/blob/main/ip.txt)" >> $GITHUB_STEP_SUMMARY
-        echo "- [🔄 Actions](https://github.com/${{ github.repository }}/actions)" >> $GITHUB_STEP_SUMMARY
